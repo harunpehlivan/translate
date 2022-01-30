@@ -108,40 +108,38 @@ if __name__ == "__main__":
         print("Model path not specified")
         sys.exit(0)
 
-    if options.train_file is not None and options.target_train_file is None:
-        model = unsupervised_morphology.UnsupervisedMorphology(
-            input_file=options.train_file,
-            smoothing_const=options.smooth_const,
-            use_hardEM=options.use_hardEM,
-            len_cost_pow=options.len_cost_pow,
-        )
-        print("Number of training words", len(model.params.word_counts))
-        model.expectation_maximization(
-            options.em_iter,
-            options.num_cpus,
-            options.model_path if options.save_checkpoint else None,
-        )
+    if options.train_file is not None:
+        if options.target_train_file is None:
+            model = unsupervised_morphology.UnsupervisedMorphology(
+                input_file=options.train_file,
+                smoothing_const=options.smooth_const,
+                use_hardEM=options.use_hardEM,
+                len_cost_pow=options.len_cost_pow,
+            )
+            print("Number of training words", len(model.params.word_counts))
+            model.expectation_maximization(
+                options.em_iter,
+                options.num_cpus,
+                options.model_path if options.save_checkpoint else None,
+            )
+        else:
+            model = unsupervised_bilingual_morphology.UnsupervisedBilingualMorphology(
+                src_file=options.train_file,
+                dst_file=options.target_train_file,
+                smoothing_const=options.smooth_const,
+                use_hardEM=options.use_hardEM,
+                max_morph_len=options.max_morph_len,
+                len_cost_pow=options.len_cost_pow,
+            )
+            model.expectation_maximization(
+                src_file_path=options.train_file,
+                dst_file_path=options.target_train_file,
+                num_iters=options.em_iter,
+                num_cpus=options.num_cpus,
+                model_path=options.model_path if options.save_checkpoint else None,
+            )
         if not options.save_checkpoint:
             model.params.save(options.model_path)
-    elif options.train_file is not None and options.target_train_file is not None:
-        model = unsupervised_bilingual_morphology.UnsupervisedBilingualMorphology(
-            src_file=options.train_file,
-            dst_file=options.target_train_file,
-            smoothing_const=options.smooth_const,
-            use_hardEM=options.use_hardEM,
-            max_morph_len=options.max_morph_len,
-            len_cost_pow=options.len_cost_pow,
-        )
-        model.expectation_maximization(
-            src_file_path=options.train_file,
-            dst_file_path=options.target_train_file,
-            num_iters=options.em_iter,
-            num_cpus=options.num_cpus,
-            model_path=options.model_path if options.save_checkpoint else None,
-        )
-        if not options.save_checkpoint:
-            model.params.save(options.model_path)
-
     if options.input_file is not None and options.output_file is not None:
         morphology_class = (
             unsupervised_bilingual_morphology.BilingualMorphologyHMMParams
@@ -157,18 +155,16 @@ if __name__ == "__main__":
         segmentor = segmentor_class(model)
 
         segment_cache = {}
-        writer = open(options.output_file, "w", encoding="utf-8")
-        with open(options.input_file, "r", encoding="utf-8") as input_stream:
-            for line in input_stream:
-                output = []
-                for word in line.strip().split():
-                    if word not in segment_cache:
-                        segmented = segmentor.segment_word(word)
-                        segment_cache[word] = segmented
-                    output.append(segment_cache[word])
-                writer.write(" ".join(output) + "\n")
-        writer.close()
-
+        with open(options.output_file, "w", encoding="utf-8") as writer:
+            with open(options.input_file, "r", encoding="utf-8") as input_stream:
+                for line in input_stream:
+                    output = []
+                    for word in line.strip().split():
+                        if word not in segment_cache:
+                            segmented = segmentor.segment_word(word)
+                            segment_cache[word] = segmented
+                        output.append(segment_cache[word])
+                    writer.write(" ".join(output) + "\n")
     if options.investigate:
         morphology_class = (
             unsupervised_bilingual_morphology.BilingualMorphologyHMMParams

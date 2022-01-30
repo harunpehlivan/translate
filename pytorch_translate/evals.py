@@ -251,9 +251,7 @@ def calculate_bleu_on_subset(
     corresponding dataset
     lang_pair is passed to identify model to be used for generation
     """
-    if isinstance(task, PyTorchTranslateMultiTask) or isinstance(
-        task, DualLearningTask
-    ):
+    if isinstance(task, (PyTorchTranslateMultiTask, DualLearningTask)):
         for key, dataset in task.datasets[dataset_split].datasets.items():
             datasets.append(dataset)
             lang_pairs.append(key)
@@ -271,13 +269,10 @@ def calculate_bleu_on_subset(
         )
         scores.append(scorer.score())
         print(
-            f"| epoch {epoch_str} | offset {offset} "
-            f"| Eval on {dataset_split} {lang_pair if lang_pair else ''} subset "
-            f"with beam={args.beam}: {scorer.result_string()}. "
-            f"Generated {num_sentences} sentences ({gen_timer.n} tokens) "
-            f"in {gen_timer.sum:.1f}s ({1. / gen_timer.avg:.2f} tokens/s).",
+            f'| epoch {epoch_str} | offset {offset} | Eval on {dataset_split} {lang_pair or ""} subset with beam={args.beam}: {scorer.result_string()}. Generated {num_sentences} sentences ({gen_timer.n} tokens) in {gen_timer.sum:.1f}s ({1.0 / gen_timer.avg:.2f} tokens/s).',
             flush=True,
         )
+
 
         if hasattr(model, "get_teacher_model"):
             scorer, num_sentences, gen_timer, _ = generate.generate_score(
@@ -288,13 +283,10 @@ def calculate_bleu_on_subset(
                 lang_pair=lang_pair,
             )
             print(
-                f"TEACHER MODEL: | epoch {epoch_str} | offset {offset} "
-                f"| Eval on {dataset_split} {lang_pair if lang_pair else ''} subset "
-                f"with beam={args.beam}: {scorer.result_string()}. "
-                f"Generated {num_sentences} sentences ({gen_timer.n} tokens) "
-                f"in {gen_timer.sum:.1f}s ({1. / gen_timer.avg:.2f} tokens/s).",
+                f'TEACHER MODEL: | epoch {epoch_str} | offset {offset} | Eval on {dataset_split} {lang_pair or ""} subset with beam={args.beam}: {scorer.result_string()}. Generated {num_sentences} sentences ({gen_timer.n} tokens) in {gen_timer.sum:.1f}s ({1.0 / gen_timer.avg:.2f} tokens/s).',
                 flush=True,
             )
+
 
     # Set max_sentences to its original value
     args.max_sentences = max_sentences_train

@@ -44,9 +44,10 @@ def compute_top_k(
         itr = progress_bar.build_progress_bar(
             args=progress_bar_args,
             iterator=itr,
-            prefix=f"top-k probs eval",
+            prefix='top-k probs eval',
             no_progress_bar="simple",
         )
+
 
     for sample in itr:
         sentence_ids = sample["id"]

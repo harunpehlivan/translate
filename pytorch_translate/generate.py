@@ -49,7 +49,7 @@ def generate_score(
         lang_pair: Optional model key in a multi model object. Specify None in
             single model set up
     """
-    if lang_pair and len(models) > 0 and isinstance(models[0], FairseqMultiModel):
+    if lang_pair and models and isinstance(models[0], FairseqMultiModel):
         if isinstance(dataset, data.RoundRobinZipDatasets):
             dataset = dataset.datasets[lang_pair]
         return _generate_score(

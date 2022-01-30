@@ -106,7 +106,7 @@ class MultiheadAttentionTest(unittest.TestCase):
         return reference
 
     def _generate_src_lengths(self, batch_size, seq_len):
-        src_lengths = np.array([random.randint(1, seq_len) for i in range(batch_size)])
+        src_lengths = np.array([random.randint(1, seq_len) for _ in range(batch_size)])
 
         # max source length has to equal seq_len, so randomly choose
         # one example to have source length = seq_len
@@ -119,13 +119,11 @@ class MultiheadAttentionTest(unittest.TestCase):
     def _split_heads_ref(self, X, dims, nheads, d_head):
         X_split = np.reshape(X, dims[:2] + [nheads, d_head])
         X_split_transposed = np.transpose(X_split, [0, 2, 1, 3])
-        reference = np.reshape(X_split_transposed, [dims[0], nheads, dims[1], d_head])
-        return reference
+        return np.reshape(X_split_transposed, [dims[0], nheads, dims[1], d_head])
 
     def _combine_heads_ref(self, X, dims, nheads, d_head):
         X_transposed = np.transpose(X, [0, 2, 1, 3])
-        reference = np.reshape(X_transposed, dims[:2] + [nheads * d_head])
-        return reference
+        return np.reshape(X_transposed, dims[:2] + [nheads * d_head])
 
     def _fc(self, X, X_name, module, start=None, end=None):
         X_fc_b = None

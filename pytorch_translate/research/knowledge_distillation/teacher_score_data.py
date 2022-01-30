@@ -106,9 +106,16 @@ class TeacherDataset(data.language_pair_dataset.LanguagePairDataset):
         sen_ids = batched_samples["id"].numpy()
 
         if teacher_models is not None:
-            all_sen_ids_memoized = all(id in top_k_teacher_scores for id in sen_ids)
+            if all_sen_ids_memoized := all(
+                id in top_k_teacher_scores for id in sen_ids
+            ):
+                # We assume that when there is a batch which is entirely memoized
+                # that means we do not need the teacher models anymore, and
+                # it is better to remove them from memory.
+                if len(teacher_models) > 0:
+                    del teacher_models[:]
 
-            if not all_sen_ids_memoized:
+            else:
                 # Because there is a high chance that the batches do not fit into memory
                 # for big batches, we have to split them into smaller batches and
                 # memoize their values separately.
@@ -175,13 +182,6 @@ class TeacherDataset(data.language_pair_dataset.LanguagePairDataset):
                             top_k_teacher_indices[id] = indices[id_index][
                                 :target_length, :
                             ]
-            else:
-                # We assume that when there is a batch which is entirely memoized
-                # that means we do not need the teacher models anymore, and
-                # it is better to remove them from memory.
-                if len(teacher_models) > 0:
-                    del teacher_models[:]
-
         # Now we assume that all values are already memoized.
         # Preparing all zero scores and gradually filling them in.
         max_ntokens = batched_samples["target"].shape[1]

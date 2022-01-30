@@ -140,9 +140,11 @@ class TestBPE(unittest.TestCase):
 
         output = []
         for line in txt_content:
-            cur_line_output = []
-            for word in line.strip().split():
-                cur_line_output.append(" ".join(bpe_model.segment_word(word)))
+            cur_line_output = [
+                " ".join(bpe_model.segment_word(word))
+                for word in line.strip().split()
+            ]
+
             output.append(" ".join(cur_line_output))
             output.append("\n")
         expected_output = "".join(output).strip()

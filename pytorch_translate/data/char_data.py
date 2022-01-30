@@ -84,15 +84,13 @@ class InMemoryNumpyWordCharDataset(data.indexed_dataset.IndexedDataset):
         if embed_bytes:
             # The byte_id needs to be incremented by 1 to account for the
             # padding id (0) in the embedding table
-            char_inds = (
+            return (
                 [vocab_constants.NUM_BYTE_INDICES + TAGS.index(word) + 1]
                 if word in TAGS
                 else [byte_id + 1 for byte_id in word.encode("utf8", "ignore")]
             )
-        else:
-            chars = [word] if word in TAGS else list(word)
-            char_inds = [char_dict.index(c) for c in chars]
-        return char_inds
+        chars = [word] if word in TAGS else list(word)
+        return [char_dict.index(c) for c in chars]
 
     def parse(
         self,

@@ -215,9 +215,11 @@ class CharCNNModel(nn.Module):
                 ]
             )
 
-            highway_layers = []
-            for _ in range(self.num_highway_layers):
-                highway_layers.append(HighwayLayer(self.filter_dims))
+            highway_layers = [
+                HighwayLayer(self.filter_dims)
+                for _ in range(self.num_highway_layers)
+            ]
+
             self.highway_layers = nn.ModuleList(highway_layers)
 
             if char_cnn_output_dim != -1:
@@ -303,10 +305,7 @@ class CharCNNModel(nn.Module):
         rest of the model, we need to normalize the pretrained weights.
         Here we divide by a fixed constant.
         """
-        # the highway layers have same dimensionality as the number of cnn filters
         input_dim = sum(f[0] for f in self.convolutions_params)
-
-        highway_layers = []
         for k in range(self.num_highway_layers):
             highway_layer = HighwayLayer(input_dim)
 
@@ -340,7 +339,7 @@ class CharCNNModel(nn.Module):
                 self._finetune_pretrained_weights
             )
 
-        highway_layers.append(highway_layer)
+        highway_layers = [highway_layer]
         self.highway_layers = nn.ModuleList(highway_layers)
 
     def _load_projection(self):
@@ -383,7 +382,7 @@ class CharCNNModel(nn.Module):
         # Pooling over the entire seq
         pools = [self.pooling(conv, char_lengths, dim=2) for conv in kernel_outputs]
         # [total_words, sum(output_channel_dim)]
-        encoder_output = torch.cat([p for p in pools], 1)
+        encoder_output = torch.cat(list(pools), 1)
 
         for highway_layer in self.highway_layers:
             encoder_output = highway_layer(encoder_output)

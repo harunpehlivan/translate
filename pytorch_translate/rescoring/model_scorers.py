@@ -53,8 +53,8 @@ class SimpleModelScorer(object):
         eos = self.task.target_dictionary.eos()
         tgt_tokens[:, 0] = torch.tensor(eos)
 
+        start = 1
         for i, hypo in enumerate(hypos):
-            start = 1
             end = start + len(hypo["tokens"])
             tgt_tokens[i, start:end] = hypo["tokens"]
 

@@ -367,9 +367,10 @@ class TransformerDecoder(FairseqIncrementalDecoder):
         self.layers.extend(
             [
                 fairseq_transformer.TransformerDecoderLayer(args)
-                for i in range(args.decoder_layers)
+                for _ in range(args.decoder_layers)
             ]
         )
+
 
         self.adaptive_softmax = None
 

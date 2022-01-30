@@ -79,13 +79,12 @@ class PytorchTranslateTranslationFromPretrainedXLMTask(PytorchTranslateTask):
         print(f"| [{source_lang}] dictionary: {len(source_dict)} types")
         print(f"| [{target_lang}] dictionary: {len(target_dict)} types")
 
-        use_char_source = (
+        if use_char_source := (
             (args.char_source_vocab_file != "")
             or (getattr(args, "arch", "") == "char_source")
             or (getattr(args, "arch", "") == "char_source_transformer")
             or getattr(args, "arch", "") == "char_source_hybrid"
-        )
-        if use_char_source:
+        ):
             char_source_dict = MaskedLMDictionary.load(args.char_source_vocab_file)
             # this attribute is used for CharSourceModel construction
             args.char_source_dict_size = len(char_source_dict)

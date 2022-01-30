@@ -87,7 +87,7 @@ class RescoringCriterion(FairseqCriterion):
                 maxlen=int(self.args.max_len_a * srclen + self.args.max_len_b),
             )
 
-        word_hypos = [[] for j in range(bsz)]
+        word_hypos = [[] for _ in range(bsz)]
         for k in range(bsz):
             word_hypos[k] = [{"tokens": sample["target"][k]}]
 
@@ -222,10 +222,9 @@ class RescoringCriterion(FairseqCriterion):
         ]
         bsz, src_len = src_tokens.size()
         hypos_len = hypos_len.type_as(scores)
-        combined_scores = combine_weighted_scores(
+        return combine_weighted_scores(
             scores, weights, src_len, hypos_len, args.length_penalty
         )
-        return combined_scores
 
     def load_rescore_models(self, args):
         """load rescoring models"""

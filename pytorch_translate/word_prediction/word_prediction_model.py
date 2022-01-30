@@ -70,10 +70,7 @@ class RNNWordPredictionModel(WordPredictionModel):
             args, src_dict, dst_dict
         )
 
-        if args.sequence_lstm:
-            encoder_class = LSTMSequenceEncoder
-        else:
-            encoder_class = RNNEncoder
+        encoder_class = LSTMSequenceEncoder if args.sequence_lstm else RNNEncoder
         decoder_class = RNNDecoder
 
         encoder = encoder_class(

@@ -589,10 +589,7 @@ class MultiSourceSequenceGenerator(torch.nn.Module):
                     )
                     decoder_out[0] = decoder_out[0][:, -1, :]
                     attn = decoder_out[1]
-                    if len(decoder_out) == 3:
-                        possible_translation_tokens = decoder_out[2]
-                    else:
-                        possible_translation_tokens = None
+                    possible_translation_tokens = decoder_out[2] if len(decoder_out) == 3 else None
                 probs = (
                     src_weight
                     * model_weight

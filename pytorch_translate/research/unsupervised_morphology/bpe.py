@@ -183,12 +183,11 @@ class BPE(object):
         step = 0
         while True:
             merge_candidate = self.get_best_candidate()
-            if merge_candidate is not None:
-                self.merge_candidate_into_vocab(merge_candidate=merge_candidate)
-                if len(self.vocab) >= vocab_size:
-                    break
-            else:
+            if merge_candidate is None:
                 # No more merges possible
+                break
+            self.merge_candidate_into_vocab(merge_candidate=merge_candidate)
+            if len(self.vocab) >= vocab_size:
                 break
             step += 1
             if step % 50 == 0:

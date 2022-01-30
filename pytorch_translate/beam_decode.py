@@ -135,10 +135,7 @@ class SequenceGenerator(object):
             if "net_input" not in sample:
                 continue
 
-            if cuda:
-                s = utils.move_to_cuda(sample)
-            else:
-                s = sample
+            s = utils.move_to_cuda(sample) if cuda else sample
             input = s["net_input"]
             srclen = input["src_tokens"].size(1)
             if self.use_char_source:
@@ -185,16 +182,16 @@ class SequenceGenerator(object):
         )
 
     def prepare_encoder_inputs(self, encoder_input):
-        if self.use_char_source:
-            encoder_inputs = (
+        return (
+            (
                 encoder_input["src_tokens"],
                 encoder_input["src_lengths"],
                 encoder_input["char_inds"],
                 encoder_input["word_lengths"],
             )
-        else:
-            encoder_inputs = (encoder_input["src_tokens"], encoder_input["src_lengths"])
-        return encoder_inputs
+            if self.use_char_source
+            else (encoder_input["src_tokens"], encoder_input["src_lengths"])
+        )
 
     def _build_constraints(self, src_tokens, beam_size):
         """
@@ -719,10 +716,7 @@ class SequenceGenerator(object):
                 attn = decoder_out[1]
                 if isinstance(model.decoder, TransformerAANDecoder):
                     attn = attn["attn"]
-                if len(decoder_out) == 3:
-                    possible_translation_tokens = decoder_out[2]
-                else:
-                    possible_translation_tokens = None
+                possible_translation_tokens = decoder_out[2] if len(decoder_out) == 3 else None
                 if (
                     hasattr(model.decoder, "adaptive_softmax")
                     and model.decoder.adaptive_softmax is not None
@@ -735,10 +729,9 @@ class SequenceGenerator(object):
                         decoder_out, log_probs=False, sample={"target": None}
                     )
                     probs = probs[:, -1, :]
-                    log_probs = model_weight * probs.log()
                 else:
                     probs = model.get_normalized_probs(decoder_out, log_probs=False)
-                    log_probs = model_weight * probs.log()
+                log_probs = model_weight * probs.log()
                 all_translation_tokens.append(possible_translation_tokens)
                 all_log_probs.append(log_probs)
 
@@ -871,7 +864,7 @@ class BeamDecode(torch.jit.ScriptModule):
         while present_position >= 0:
             beam_indices.insert(0, beam_index)
             beam_index = int(beam_prev_indices[present_position][beam_index])
-            present_position = present_position - 1
+            present_position -= 1
         return beam_indices
 
     @torch.jit.script_method
@@ -919,32 +912,29 @@ class BeamDecode(torch.jit.ScriptModule):
 
                 # If hypothesis was completed in the previous index,
                 # then just continue
-                if bool(hypo_is_finished[hyp_index] == 0):
-                    # If the present token is EOS or we have reached max_length
-                    # then hypothesis is complete
-                    if bool(
-                        beam_tokens[position][hyp_index] == self.eos_token_id
-                    ) or bool(position == num_steps):
+                if bool(hypo_is_finished[hyp_index] == 0) and (
+                    bool(beam_tokens[position][hyp_index] == self.eos_token_id)
+                    or bool(position == num_steps)
+                ):
+                    if bool(self.stop_at_eos):
+                        hypo_is_finished[hyp_index] = 1
 
-                        if bool(self.stop_at_eos):
-                            hypo_is_finished[hyp_index] = 1
-
-                        hypo_score = float(beam_scores[position][hyp_index])
-                        if bool(self.length_penalty != 0):
-                            hypo_score = hypo_score / float(position) ** float(
+                    hypo_score = float(beam_scores[position][hyp_index])
+                    if bool(self.length_penalty != 0):
+                        hypo_score /= float(position) ** float(
                                 self.length_penalty
                             )
 
-                        end_states, min_score = self._add_to_end_states(
-                            end_states,
-                            min_score,
-                            torch.tensor(
-                                [hypo_score, float(position), float(hyp_index)]
-                            ),
-                        )
+                    end_states, min_score = self._add_to_end_states(
+                        end_states,
+                        min_score,
+                        torch.tensor(
+                            [hypo_score, float(position), float(hyp_index)]
+                        ),
+                    )
 
             prev_hypo_is_finished = hypo_is_finished
-            position = position + 1
+            position += 1
 
         end_states = torch.stack(end_states)
 

@@ -70,10 +70,7 @@ class BucketStopwatchMeter(object):
     def avgs(self):
         result = [0] * self.n_buckets
         for i in range(self.n_buckets):
-            if self.n[i] != 0:
-                result[i] = self.sum[i] / self.n[i]
-            else:
-                result[i] = 0
+            result[i] = self.sum[i] / self.n[i] if self.n[i] != 0 else 0
         return result
 
 
@@ -166,9 +163,7 @@ def maybe_cat(tensors, dim, nullable=None):
 
 def maybe_cuda(t):
     """Calls `cuda()` on `t` if cuda is available."""
-    if torch.cuda.is_available():
-        return t.cuda()
-    return t
+    return t.cuda() if torch.cuda.is_available() else t
 
 
 def average_tensors(tensor_list, norm_fn=None, weights=None):
@@ -249,8 +244,7 @@ def torch_find(index, query, vocab_size):
     full_to_index = maybe_cuda(torch.zeros(vocab_size).long())
     index_shape_range = maybe_cuda(torch.arange(index.shape[0]).long())
     full_to_index[index] = index_shape_range
-    result = full_to_index[query]
-    return result
+    return full_to_index[query]
 
 
 def all_gather_from_master(args, data: List) -> List:
@@ -294,10 +288,7 @@ def get_source_tokens_tensor(src_tokens):
     to be source tokens and do the necessary operation.
     eg : bsz, _ = get_source_tokens_tensor(source_tokens)[0].size(0)
     """
-    if type(src_tokens) is tuple:
-        return src_tokens[0]
-    else:
-        return src_tokens
+    return src_tokens[0] if type(src_tokens) is tuple else src_tokens
 
 
 def maybe_parse_collection_argument(path: str) -> Union[str, Dict]:

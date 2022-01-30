@@ -197,10 +197,10 @@ def set_default_args(args):
         )
 
     if (
-        args.arch == "char_source"
-        or args.arch == "char_source_transformer"
-        or args.arch == "char_source_hybrid"
-    ) and not args.char_source_vocab_file:
+        args.arch
+        in ["char_source", "char_source_transformer", "char_source_hybrid"]
+        and not args.char_source_vocab_file
+    ):
         args.char_source_vocab_file = pytorch_translate_dictionary.default_char_dictionary_path(
             save_dir=args.save_dir, dialect=args.source_lang
         )
@@ -450,24 +450,25 @@ def create_prune_masks(args, trainer):
     assert (
         args.pruning_percentile > 0 and args.pruning_percentile < 100
     ), "--pruning-percentile must be in (0, 100)"
-    all_params = []
     if args.parameters_to_prune == "all":
         parameter_name = "weight"
     elif args.parameters_to_prune == "embed":
         parameter_name = "embed_tokens"
     elif args.parameters_to_prune == "lstm":
         parameter_name = "weight_"
-    for name, params in trainer.model.named_parameters():
-        if parameter_name in name:
-            all_params.append(np.abs(np.reshape(params.data, (-1, 1))))
+    all_params = [
+        np.abs(np.reshape(params.data, (-1, 1)))
+        for name, params in trainer.model.named_parameters()
+        if parameter_name in name
+    ]
+
     threshold = np.percentile(np.vstack(all_params), args.pruning_percentile)
 
-    prune_masks = {}
-    for name, params in trainer.model.named_parameters():
-        if parameter_name in name:
-            prune_masks[name] = np.abs(params.data) < threshold
-
-    return prune_masks
+    return {
+        name: np.abs(params.data) < threshold
+        for name, params in trainer.model.named_parameters()
+        if parameter_name in name
+    }
 
 
 def apply_prune_masks(prune_masks, trainer):

@@ -483,14 +483,6 @@ def validate_preprocessing_args(args):
             "--train_mono_{source, target}_*"
         )
 
-        for file_type in ("train_mono_source_text_file", "train_mono_target_text_file"):
-            file_path = getattr(args, file_type)
-            if file_path and not os.path.isfile(file_path):
-                raise ValueError(
-                    f"Please specify an existing text file for --{file_type}="
-                    f"{file_path}"
-                )
-
 
 def expand_optimization_args(group):
     """Expands the optimization related arguments with pytorch_translate

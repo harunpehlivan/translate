@@ -25,10 +25,10 @@ class WordPredictor(nn.Module):
             self.init_layer = nn.Linear(encoder_output_dim, encoder_output_dim)
             self.attn_layer = nn.Linear(2 * encoder_output_dim, 1)
             self.hidden_layer = nn.Linear(2 * encoder_output_dim, hidden_dim)
-            self.output_layer = nn.Linear(hidden_dim, output_dim)
         else:
             self.hidden_layer = nn.Linear(encoder_output_dim, hidden_dim)
-            self.output_layer = nn.Linear(hidden_dim, output_dim)
+
+        self.output_layer = nn.Linear(hidden_dim, output_dim)
 
     def forward(self, encoder_output):
         # [source_length, batch_size, encoder_output_dim]
@@ -46,7 +46,7 @@ class WordPredictor(nn.Module):
             pred_input = torch.cat([init_state, attned_state], 1)
             pred_hidden = F.relu(self.hidden_layer(pred_input))
             # [batch_size, vocab_size]
-            logits = self.output_layer(pred_hidden)
+            return self.output_layer(pred_hidden)
         else:
             # [source_length, batch_size, hidden_dim]
             hidden = F.relu(self.hidden_layer(encoder_hiddens))
@@ -54,9 +54,7 @@ class WordPredictor(nn.Module):
             mean_hidden = torch.mean(hidden, 0)
             max_hidden = torch.max(hidden, 0)[0]
             # [batch_size, vocab_size]
-            logits = self.output_layer(mean_hidden + max_hidden)
-
-        return logits
+            return self.output_layer(mean_hidden + max_hidden)
 
     def _get_init_state(self, encoder_hiddens):
         x = torch.mean(encoder_hiddens, 0)

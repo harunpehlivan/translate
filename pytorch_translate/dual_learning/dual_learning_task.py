@@ -342,22 +342,13 @@ class DualLearningTask(FairseqTask):
         return utils.move_to_cuda(sample)
 
     def _get_src_dict(self, model_key):
-        if model_key == "primal":
-            return self.primal_src_dict
-        else:
-            return self.dual_src_dict
+        return self.primal_src_dict if model_key == "primal" else self.dual_src_dict
 
     def _get_tgt_dict(self, model_key):
-        if model_key == "primal":
-            return self.primal_tgt_dict
-        else:
-            return self.dual_tgt_dict
+        return self.primal_tgt_dict if model_key == "primal" else self.dual_tgt_dict
 
     def _get_dual(self, model_key):
-        if model_key == "primal":
-            return "dual"
-        else:
-            return "primal"
+        return "dual" if model_key == "primal" else "primal"
 
     def train_step(self, sample, model, criterion, optimizer, ignore_grad=False):
         # Apply unsupervised dual learning objectives to both types of
@@ -366,8 +357,8 @@ class DualLearningTask(FairseqTask):
 
         model.train()
         agg_loss, agg_sample_size, agg_logging_output = 0.0, 0.0, {}
+        data_keys = ["source", "parallel"]
         for model_key in model.task_keys:
-            data_keys = ["source", "parallel"]
             for data_key in data_keys:
                 sample_key = f"{model_key}_{data_key}"
                 if sample[sample_key] is None:

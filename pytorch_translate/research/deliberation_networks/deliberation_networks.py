@@ -212,13 +212,12 @@ class TransformerTwoPhaseDecoder(FairseqIncrementalDecoder):
         decoder_phase1_output = self.decoder_phase1(
             prev_output_tokens, encoder_out, incremental_state
         )
-        decoder_phase2_output = self.decoder_phase2(
+        return self.decoder_phase2(
             prev_output_tokens,
             encoder_out,
             decoder_phase1_output[1]["inner_states"][-1],
             incremental_state,
         )
-        return decoder_phase2_output
 
 
 class TransformerDecoderPhase2(FairseqIncrementalDecoder):
@@ -409,14 +408,13 @@ class TransformerDecoderPhase2(FairseqIncrementalDecoder):
 
     def output_layer(self, features, **kwargs):
         """Project features to the vocabulary size."""
-        if self.adaptive_softmax is None:
-            # project back to size of vocabulary
-            if self.share_input_output_embed:
-                return F.linear(features, self.embed_tokens.weight)
-            else:
-                return F.linear(features, self.embed_out)
-        else:
+        if self.adaptive_softmax is not None:
             return features
+        # project back to size of vocabulary
+        if self.share_input_output_embed:
+            return F.linear(features, self.embed_tokens.weight)
+        else:
+            return F.linear(features, self.embed_out)
 
     def max_positions(self):
         """Maximum output length supported by the decoder."""
@@ -450,13 +448,13 @@ class TransformerDecoderPhase2(FairseqIncrementalDecoder):
                 "{}.embed_positions._float_tensor".format(name)
             ] = torch.FloatTensor(1)
 
+        # update layer norms
+        layer_norm_map = {
+            "0": "self_attn_layer_norm",
+            "1": "encoder_attn_layer_norm",
+            "2": "final_layer_norm",
+        }
         for i in range(len(self.layers)):
-            # update layer norms
-            layer_norm_map = {
-                "0": "self_attn_layer_norm",
-                "1": "encoder_attn_layer_norm",
-                "2": "final_layer_norm",
-            }
             for old, new in layer_norm_map.items():
                 for m in ("weight", "bias"):
                     k = "{}.layers.{}.layer_norms.{}.{}".format(name, i, old, m)
@@ -668,10 +666,7 @@ class TransformerDecoderLayerPhase2(nn.Module):
 
     def maybe_layer_norm(self, layer_norm, x, before=False, after=False):
         assert before ^ after
-        if after ^ self.normalize_before:
-            return layer_norm(x)
-        else:
-            return x
+        return layer_norm(x) if after ^ self.normalize_before else x
 
     def make_generation_fast_(self, need_attn=False, **kwargs):
         self.need_attn = need_attn

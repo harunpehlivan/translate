@@ -443,10 +443,7 @@ class RNNModel(FairseqEncoderDecoderModel):
     def build_single_encoder(args, src_dict, embed_tokens):
         if args.language_model_only:
             return DummyEncoder(src_dict, num_layers=args.encoder_layers)
-        if args.sequence_lstm:
-            encoder_class = LSTMSequenceEncoder
-        else:
-            encoder_class = RNNEncoder
+        encoder_class = LSTMSequenceEncoder if args.sequence_lstm else RNNEncoder
         return encoder_class(
             src_dict,
             embed_tokens=embed_tokens,
@@ -583,19 +580,19 @@ class RNNModel(FairseqEncoderDecoderModel):
     @classmethod
     def build_encoder(cls, args, src_dict, embed_tokens):
         """Build a new (multi-)encoder instance."""
-        if args.multi_encoder is not None:
-            encoders = [
-                RNNModel.build_single_encoder(args, src_dict, embed_tokens=embed_tokens)
-                for _ in range(args.multi_encoder)
-            ]
-            encoder = MultiEncoder(
-                src_dict, encoders, training_schedule=args.multi_model_training_schedule
-            )
-        else:
-            encoder = RNNModel.build_single_encoder(
+        if args.multi_encoder is None:
+            return RNNModel.build_single_encoder(
                 args, src_dict, embed_tokens=embed_tokens
             )
-        return encoder
+        encoders = [
+            RNNModel.build_single_encoder(args, src_dict, embed_tokens=embed_tokens)
+            for _ in range(args.multi_encoder)
+        ]
+        return MultiEncoder(
+            src_dict,
+            encoders,
+            training_schedule=args.multi_model_training_schedule,
+        )
 
     @classmethod
     def build_decoder(cls, args, src_dict, dst_dict, embed_tokens):
@@ -623,7 +620,7 @@ class RNNModel(FairseqEncoderDecoderModel):
                 )
                 for is_lm, n in zip(is_lm_args, ngram_decoder_args)
             ]
-            decoder = MultiDecoder(
+            return MultiDecoder(
                 src_dict,
                 dst_dict,
                 decoders=decoders,
@@ -638,10 +635,9 @@ class RNNModel(FairseqEncoderDecoderModel):
             if args.multi_encoder:
                 args.encoder_hidden_dim *= args.multi_encoder
             n = args.ngram_decoder[0] if args.ngram_decoder else None
-            decoder = RNNModel.build_single_decoder(
+            return RNNModel.build_single_decoder(
                 args, src_dict, dst_dict, embed_tokens=embed_tokens, ngram_decoder=n
             )
-        return decoder
 
     @classmethod
     def build_model(cls, args, task):
@@ -943,9 +939,10 @@ class RNNEncoder(FairseqEncoder):
                     self.word_dim if layer == 0 else hidden_dim,
                     hidden_dim,
                     self.cell_type,
-                    True if bidirectional and layer == 0 else False,
+                    bool(bidirectional and layer == 0),
                 )
             )
+
 
         self.num_layers = len(self.layers)
 
@@ -1110,13 +1107,13 @@ class RNNDecoder(DecoderWithOutputProjection):
         self.hidden_dim = hidden_dim
         self.averaging_encoder = averaging_encoder
 
-        if cell_type == "lstm":
+        if cell_type == "layer_norm_lstm":
+            cell_class = rnn_cell.LayerNormLSTMCell
+
+        elif cell_type == "lstm":
             cell_class = rnn_cell.LSTMCell
         elif cell_type == "milstm":
             cell_class = rnn_cell.MILSTMCell
-        elif cell_type == "layer_norm_lstm":
-            cell_class = rnn_cell.LayerNormLSTMCell
-
         if hidden_dim != encoder_hidden_dim:
             hidden_init_fc_list = []
             cell_init_fc_list = []
@@ -1141,11 +1138,7 @@ class RNNDecoder(DecoderWithOutputProjection):
 
         layers = []
         for layer in range(num_layers):
-            if layer == 0:
-                cell_input_dim = embed_dim
-            else:
-                cell_input_dim = hidden_dim
-
+            cell_input_dim = embed_dim if layer == 0 else hidden_dim
             # attention applied to first layer always.
             if self.first_layer_attention or layer == 0:
                 cell_input_dim += self.attention.context_dim

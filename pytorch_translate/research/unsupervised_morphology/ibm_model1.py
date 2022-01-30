@@ -26,12 +26,10 @@ class IBMModel1(object):
         self._int2str: List[str] = [self.null_str]  # Reverse of str2int
 
     def str2int(self, substr: str) -> int:
-        if substr in self._str2int:
-            return self._str2int[substr]
-        else:
+        if substr not in self._str2int:
             self._str2int[substr] = len(self._str2int)
             self._int2str.append(substr)
-            return self._str2int[substr]
+        return self._str2int[substr]
 
     def int2str(self, idx: int) -> str:
         assert idx < len(self._int2str)
@@ -39,7 +37,7 @@ class IBMModel1(object):
 
     @staticmethod
     def get_word_counts_for_line(self, line: str) -> Dict[int, int]:
-        return sum([self.str2int(word) for word in line.strip().split()], Counter())
+        return sum((self.str2int(word) for word in line.strip().split()), Counter())
 
     def _src_words_counts_in_line(self, line: str) -> Dict[str, int]:
         return Counter(self.str2int(w) for w in line.strip().split() + [self.null_str])
@@ -63,7 +61,7 @@ class IBMModel1(object):
                         self.translation_prob[src_word][dst_word] = 1.0
                 i += 1
                 if i % 100000 == 0:
-                    logger.info(f"Read sentence {str(i)}")
+                    logger.info(f'Read sentence {i}')
 
         for src_word in self.translation_prob.keys():
             denom = len(self.translation_prob[src_word])
@@ -79,7 +77,7 @@ class IBMModel1(object):
         logger.info("Initializing model parameters")
         self.initialize_translation_probs(src_path=src_path, dst_path=dst_path)
         for iter in range(num_iters):
-            logger.info(f"Iteration of IBM model: {str(iter+1)}")
+            logger.info(f'Iteration of IBM model: {iter + 1}')
             self.m_step(self.e_step(src_path=src_path, dst_path=dst_path))
 
     def e_step(self, src_path: str, dst_path: str) -> Dict[str, Dict]:
@@ -95,7 +93,7 @@ class IBMModel1(object):
                 )
                 i += 1
                 if i % 1000 == 0:
-                    logger.info(f"E step on sentence {str(i)}")
+                    logger.info(f'E step on sentence {i}')
         return translation_expectations
 
     def expectation_for_one_sentence(
@@ -120,10 +118,10 @@ class IBMModel1(object):
                     prob * s_count * d_count
                 )
 
-        for src_word in translation_fractional_counts.keys():
+        for src_word, value in translation_fractional_counts.items():
             if src_word not in translation_expectations:
                 translation_expectations[src_word] = defaultdict(float)
-            for dst_word in translation_fractional_counts[src_word].keys():
+            for dst_word in value.keys():
                 delta = (
                     translation_fractional_counts[src_word][dst_word] / denom[dst_word]
                 )

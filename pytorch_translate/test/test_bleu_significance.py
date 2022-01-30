@@ -39,12 +39,12 @@ Hodor hodor hodor hodor hodor hodor hodor"""
 
     def test_paired_bootstrap_resample_from_files(self):
         with tempfile.NamedTemporaryFile(
-            mode="w+"
-        ) as reference_file, tempfile.NamedTemporaryFile(
-            mode="w+"
-        ) as baseline_file, tempfile.NamedTemporaryFile(
-            mode="w+"
-        ) as new_file:
+                mode="w+"
+            ) as reference_file, tempfile.NamedTemporaryFile(
+                mode="w+"
+            ) as baseline_file, tempfile.NamedTemporaryFile(
+                mode="w+"
+            ) as new_file:
             self._setup_files(
                 reference_file=reference_file,
                 baseline_file=baseline_file,
@@ -59,11 +59,11 @@ Hodor hodor hodor hodor hodor hodor hodor"""
             # Sanity checks that our logic calculating BLEU score by combining
             # sufficient statistics is the same as SacreBLEU's.
             reference_file.seek(0)
-            reference_lines = [line for line in reference_file]
+            reference_lines = list(reference_file)
             baseline_file.seek(0)
-            baseline_lines = [line for line in baseline_file]
+            baseline_lines = list(baseline_file)
             new_file.seek(0)
-            new_lines = [line for line in new_file]
+            new_lines = list(new_file)
 
             self.assertEqual(
                 output.baseline_bleu,

@@ -28,10 +28,9 @@ def lex_logits(lex_h, output_projection_w_lex, output_projection_b_lex, logits_s
     """
     projection_lex_flat = torch.matmul(output_projection_w_lex, lex_h.t()).t()
 
-    logits = (
+    return (
         torch.onnx.operators.reshape_from_tensor_shape(
             projection_lex_flat, logits_shape
         )
         + output_projection_b_lex
     )
-    return logits

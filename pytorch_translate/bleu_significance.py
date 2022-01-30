@@ -66,7 +66,7 @@ def get_sufficient_stats(
 
 def calc_bleu_from_stats(sentence_stats: pd.DataFrame) -> sacrebleu.BLEU:
     corpus_stats = sentence_stats.sum(axis=0)
-    corpus_bleu = sacrebleu.compute_bleu(
+    return sacrebleu.compute_bleu(
         correct=[
             corpus_stats.correct_1_grams,
             corpus_stats.correct_2_grams,
@@ -82,7 +82,6 @@ def calc_bleu_from_stats(sentence_stats: pd.DataFrame) -> sacrebleu.BLEU:
         sys_len=corpus_stats.translation_length,
         ref_len=corpus_stats.reference_length,
     )
-    return corpus_bleu
 
 
 class PairedBootstrapOutput(NamedTuple):
@@ -157,13 +156,13 @@ def paired_bootstrap_resample_from_files(
         references: List[str] = [line for line in f]
 
     with open(baseline_file, "r") as f:
-        baseline_translations: List[str] = [line for line in f]
+        baseline_translations: List[str] = list(f)
     baseline_stats: pd.DataFrame = get_sufficient_stats(
         translations=baseline_translations, references=references
     )
 
     with open(new_file, "r") as f:
-        new_translations: List[str] = [line for line in f]
+        new_translations: List[str] = list(f)
     new_stats: pd.DataFrame = get_sufficient_stats(
         translations=new_translations, references=references
     )

@@ -48,7 +48,7 @@ class KnowledgeDistillationCriterion(FairseqCriterion):
         top_k_teacher_probs_normalized = sample["top_k_scores"]
         indices = sample["top_k_indices"]
 
-        assert indices.shape[0:1] == student_lprobs.shape[0:1]
+        assert indices.shape[0:1] == student_lprobs.shape[:1]
 
         topk_mask = torch.zeros(student_lprobs.shape).type_as(student_lprobs)
         topk_probs = topk_mask.scatter(

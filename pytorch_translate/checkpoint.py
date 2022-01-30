@@ -67,13 +67,12 @@ def load_to_cpu(path: str) -> Dict[str, Any]:
     to upgrade the state dict for backward compatibility - to make cases
     where we only care about loading the model params easier to unit test.
     """
-    state = torch.load(
+    return torch.load(
         path,
         map_location=(
             lambda s, _: torch.serialization.default_restore_location(s, "cpu")
         ),
     )
-    return state
 
 
 def is_integer_tensor(tensor: torch.Tensor) -> bool:
@@ -101,16 +100,14 @@ def sanity_check_tensor(
             f"has size of {new_tensor.size()}."
         )
 
-    if is_integer_tensor(old_tensor):
-        # The following sanity check is only relevant for integer tensors - which
-        # we expect to be index-like, and therefore should remain constant and not
-        # be averaged over.
-        if not torch.all(old_tensor == new_tensor):
-            raise ValueError(
-                f"Integer tensor {tensor_name} of type {old_tensor.type()} "
-                f"and size {old_tensor.size()} had "
-                f"{torch.sum(old_tensor != new_tensor).item()} mismatched elements."
-            )
+    if is_integer_tensor(old_tensor) and not torch.all(
+        old_tensor == new_tensor
+    ):
+        raise ValueError(
+            f"Integer tensor {tensor_name} of type {old_tensor.type()} "
+            f"and size {old_tensor.size()} had "
+            f"{torch.sum(old_tensor != new_tensor).item()} mismatched elements."
+        )
 
 
 def convert_tensor(tensor: torch.Tensor, clone: bool) -> torch.Tensor:

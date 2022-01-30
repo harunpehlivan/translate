@@ -138,20 +138,29 @@ def binarize_text_file_multilingual(
 
 def preprocess_corpora(args, dictionary_cls=Dictionary):
     if (
-        args.train_source_binary_path is not None
-        and args.train_target_binary_path is not None
-    ):
-        if isinstance(
-            utils.maybe_parse_collection_argument(args.train_source_binary_path), str
-        ) and isinstance(
-            utils.maybe_parse_collection_argument(args.train_target_binary_path), str
-        ):
-            args.train_source_binary_path = maybe_generate_temp_file_path(
+        (
+            args.train_source_binary_path is not None
+            and args.train_target_binary_path is not None
+        )
+        and isinstance(
+            utils.maybe_parse_collection_argument(
                 args.train_source_binary_path
-            )
-            args.train_target_binary_path = maybe_generate_temp_file_path(
+            ),
+            str,
+        )
+        and isinstance(
+            utils.maybe_parse_collection_argument(
                 args.train_target_binary_path
-            )
+            ),
+            str,
+        )
+    ):
+        args.train_source_binary_path = maybe_generate_temp_file_path(
+            args.train_source_binary_path
+        )
+        args.train_target_binary_path = maybe_generate_temp_file_path(
+            args.train_target_binary_path
+        )
     args.eval_source_binary_path = maybe_generate_temp_file_path(
         args.eval_source_binary_path
     )
@@ -184,10 +193,10 @@ def preprocess_corpora(args, dictionary_cls=Dictionary):
         )
         # Binarize additional monolingual corpora for the semisupervised translation
         # task
-        if (
-            args.task == constants.SEMI_SUPERVISED_TASK
-            or args.task == constants.DENOISING_AUTOENCODER_TASK
-        ):
+        if args.task in [
+            constants.SEMI_SUPERVISED_TASK,
+            constants.DENOISING_AUTOENCODER_TASK,
+        ]:
             args.train_mono_source_binary_path = maybe_generate_temp_file_path(
                 output_path=getattr(args, "train_mono_source_binary_path", None)
             )
@@ -212,8 +221,8 @@ def preprocess_monolingual_corpora(
     Preprocess source and target monolingual datasets
     Prerequisite: Vocabs are already built (see build_vocabs)
     """
-    use_char_source = char_source_dict is not None
     if getattr(args, "train_mono_source_text_file", None):
+        use_char_source = char_source_dict is not None
         args.train_mono_source_binary_path = binarize_text_file(
             text_file=args.train_mono_source_text_file,
             dictionary=source_dict,

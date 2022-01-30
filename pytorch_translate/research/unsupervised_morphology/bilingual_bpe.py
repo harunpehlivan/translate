@@ -88,8 +88,8 @@ class BilingualBPE(BPE):
                     vocab[word] += 1
 
         denom = sum(vocab.values())
-        for word in vocab.keys():
-            vocab[word] /= denom
+        for word, value in vocab.items():
+            value /= denom
         return vocab
 
     def _calc_bpe_prob_from_alignment(
@@ -114,7 +114,7 @@ class BilingualBPE(BPE):
                 bpe_alignment_prob[src_subword] += (
                     alignment_probs[src_subword] * target_word_prob
                 )
-        for src_subword in bpe_alignment_prob.keys():
+        for src_subword in bpe_alignment_prob:
             bpe_alignment_prob[src_subword] = max(
                 bpe_alignment_prob[src_subword], 1e-30
             )

@@ -75,11 +75,7 @@ class _BasePredictionCriterion(abc.ABC, LabelSmoothedCrossEntropyCriterion):
         prediction_loss = prediction_loss[non_pad_mask]
 
         # TODO: normalize , sentence avg
-        if reduce:
-            prediction_loss = prediction_loss.sum()
-        else:
-            prediction_loss = prediction_loss.sum(1)  # loss per batch element
-
+        prediction_loss = prediction_loss.sum() if reduce else prediction_loss.sum(1)
         assert translation_loss.size() == prediction_loss.size()
         loss = translation_loss + prediction_loss
 

@@ -91,9 +91,9 @@ class UnsupervisedCriterion(FairseqCriterion):
         # TODO (T36875783): load pretrained lm to score
         lm_score = 0.5
         eos_index = tgt_dict.eos()
+        # compute each model's reward
+        forward_reward = lm_score
         for id, src, hypos in nbest_translations:
-            # compute each model's reward
-            forward_reward = lm_score
             # construct the sample; compute the ce loss
             # backward_samples need to handle EOS
             original_src = src

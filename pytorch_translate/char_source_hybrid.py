@@ -190,8 +190,7 @@ class CharSourceHybridModel(hybrid_transformer_rnn.HybridTransformerRNNModel):
         inputs.
         """
         encoder_out = self.encoder(src_tokens, src_lengths, char_inds, word_lengths)
-        decoder_out = self.decoder(prev_output_tokens, encoder_out)
-        return decoder_out
+        return self.decoder(prev_output_tokens, encoder_out)
 
 
 class CharCNNEncoder(FairseqEncoder):

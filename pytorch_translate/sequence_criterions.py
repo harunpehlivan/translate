@@ -86,8 +86,7 @@ class BaseSequenceLossCriterion(FairseqCriterion):
         gen_bsz = bsz // translator.beam_size + 1
         for f in range(0, bsz, gen_bsz):
             t = min(f + gen_bsz, bsz)
-            for trans in translator.generate((enc_input[0][f:t], enc_input[1][f:t])):
-                yield trans
+            yield from translator.generate((enc_input[0][f:t], enc_input[1][f:t]))
 
     def compute_nll(self, model, sample, translations):
         """Compute negative log-likelihoods for the translations.

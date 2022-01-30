@@ -93,7 +93,7 @@ class TestTeacherScoreDataSet(unittest.TestCase):
             top_k_teacher_indices,
         )
 
-        assert len(teacher_models) == 0
+        assert not teacher_models
         probs_before = b1["top_k_scores"].numpy()
         indices_before = b1["top_k_indices"].numpy()
         probs_after = b5["top_k_scores"].numpy()

@@ -445,13 +445,13 @@ class TransformerAANDecoder(FairseqIncrementalDecoder):
                 del state_dict["decoder.embed_positions.weights"]
             state_dict["decoder.embed_positions._float_tensor"] = torch.FloatTensor(1)
 
+        # update layer norms
+        layer_norm_map = {
+            "0": "aan_layer_norm",
+            "1": "encoder_attn_layer_norm",
+            "2": "final_layer_norm",
+        }
         for i in range(len(self.layers)):
-            # update layer norms
-            layer_norm_map = {
-                "0": "aan_layer_norm",
-                "1": "encoder_attn_layer_norm",
-                "2": "final_layer_norm",
-            }
             for old, new in layer_norm_map.items():
                 for m in ("weight", "bias"):
                     k = "decoder.layers.{}.layer_norms.{}.{}".format(i, old, m)
@@ -648,10 +648,7 @@ class TransformerAANDecoderLayer(nn.Module):
 
     def maybe_layer_norm(self, layer_norm, x, before=False, after=False):
         assert before ^ after
-        if after ^ self.normalize_before:
-            return layer_norm(x)
-        else:
-            return x
+        return layer_norm(x) if after ^ self.normalize_before else x
 
     def make_generation_fast_(self, need_attn=False, **kwargs):
         self.need_attn = need_attn
@@ -668,8 +665,7 @@ def Embedding(num_embeddings, embedding_dim, padding_idx):
 
 
 def LayerNorm(embedding_dim):
-    m = nn.LayerNorm(embedding_dim)
-    return m
+    return nn.LayerNorm(embedding_dim)
 
 
 def Linear(in_features, out_features, bias=True):

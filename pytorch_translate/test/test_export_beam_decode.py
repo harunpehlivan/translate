@@ -69,11 +69,12 @@ class TestExportBeamDecode(unittest.TestCase):
                 end_state, beam_prev_indices
             )
             weights_from_output = torch.stack(output[state_idx][3]).numpy()
-            weights_from_input = []
-            for pos, beam_index in enumerate(beam_indices):
-                if pos == 0:
-                    continue
-                weights_from_input.append(token_weights[pos][beam_index])
+            weights_from_input = [
+                token_weights[pos][beam_index]
+                for pos, beam_index in enumerate(beam_indices)
+                if pos != 0
+            ]
+
             weights_from_input = torch.stack(weights_from_input).numpy()
 
             np.testing.assert_array_equal(weights_from_output, weights_from_input)
@@ -184,17 +185,19 @@ class TestExportBeamDecode(unittest.TestCase):
             # adds an EOS at the end after MAX_SEQ_LEN
             ## Compare two hypothesis
             np.testing.assert_array_equal(
-                top_seq_gen_hypothesis[hyp_index]["tokens"].tolist()[0:MAX_SEQ_LEN],
-                top_beam_decode_hypothesis[0].tolist()[0:MAX_SEQ_LEN],
+                top_seq_gen_hypothesis[hyp_index]["tokens"].tolist()[:MAX_SEQ_LEN],
+                top_beam_decode_hypothesis[0].tolist()[:MAX_SEQ_LEN],
             )
+
             ## Compare token level scores
             np.testing.assert_array_almost_equal(
                 top_seq_gen_hypothesis[hyp_index]["positional_scores"].tolist()[
-                    0:MAX_SEQ_LEN
+                    :MAX_SEQ_LEN
                 ],
-                top_beam_decode_hypothesis[2][0:MAX_SEQ_LEN],
+                top_beam_decode_hypothesis[2][:MAX_SEQ_LEN],
                 decimal=1,
             )
+
 
             ## Compare attention weights
             np.testing.assert_array_almost_equal(

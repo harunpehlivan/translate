@@ -44,7 +44,7 @@ def char_tokenize_line(line):
         if word in TAGS:
             chars.append(word)
         else:
-            chars.extend(c for c in word)
+            chars.extend(iter(word))
     return chars
 
 

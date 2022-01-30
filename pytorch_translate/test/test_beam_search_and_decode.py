@@ -108,17 +108,19 @@ class TestBeamSearchAndDecode(unittest.TestCase):
 
             # Compare two hypotheses
             np.testing.assert_array_equal(
-                top_seq_gen_hypothesis[hyp_index]["tokens"].tolist()[0:MAX_SEQ_LEN],
-                beam_search_and_decode_hypothesis[0].tolist()[0:MAX_SEQ_LEN],
+                top_seq_gen_hypothesis[hyp_index]["tokens"].tolist()[:MAX_SEQ_LEN],
+                beam_search_and_decode_hypothesis[0].tolist()[:MAX_SEQ_LEN],
             )
+
             # Compare token level scores
             np.testing.assert_array_almost_equal(
                 top_seq_gen_hypothesis[hyp_index]["positional_scores"].tolist()[
-                    0:MAX_SEQ_LEN
+                    :MAX_SEQ_LEN
                 ],
-                beam_search_and_decode_hypothesis[2][0:MAX_SEQ_LEN],
+                beam_search_and_decode_hypothesis[2][:MAX_SEQ_LEN],
                 decimal=1,
             )
+
 
             # Compare attention weights
             np.testing.assert_array_almost_equal(

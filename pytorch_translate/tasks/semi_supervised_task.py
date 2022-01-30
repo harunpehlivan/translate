@@ -118,12 +118,7 @@ class PytorchTranslateSemiSupervised(PyTorchTranslateMultiTask):
     def parse_loss_weights(loss_weights_json: str):
         # [[num_epochs, {'model_key': weight, ...}], ...]
         loss_weights_decoded_json = json.loads(loss_weights_json.replace("'", '"'))
-        # [(num_epochs, {'model_key': weight, ...}), ...]
-        loss_weights = [
-            (num_epochs, weights_dict)
-            for num_epochs, weights_dict in loss_weights_decoded_json
-        ]
-        return loss_weights
+        return list(loss_weights_decoded_json)
 
     def load_monolingual_dataset(
         self, bin_path, is_source=False, num_examples_limit=None

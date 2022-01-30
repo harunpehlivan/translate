@@ -77,11 +77,12 @@ class WeightedEpochBatchIterator(iterators.EpochBatchIterator):
                 if dataset_name in dataset_weights_map:
                     assert isinstance(
                         self.dataset.datasets[dataset_name],
-                        weighted_data.WeightedLanguagePairDataset,
-                    ) or isinstance(
-                        self.dataset.datasets[dataset_name],
-                        weighted_data.WeightedBacktranslationDataset,
+                        (
+                            weighted_data.WeightedLanguagePairDataset,
+                            weighted_data.WeightedBacktranslationDataset,
+                        ),
                     )
+
                     self.dataset.datasets[dataset_name].weights = [
                         dataset_weights_map[dataset_name]
                     ]

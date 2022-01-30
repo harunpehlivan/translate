@@ -107,7 +107,7 @@ class TestKnowledgeDistillation(unittest.TestCase):
         prev_output_tokens = torch.cat([eos_column, output_sequence], dim=1)
         target_tokens = torch.cat([output_sequence, eos_column], dim=1)
 
-        sample = {
+        return {
             "net_input": {
                 "src_tokens": torch.randint(
                     low=self.task.src_dict.nspecial,
@@ -120,7 +120,6 @@ class TestKnowledgeDistillation(unittest.TestCase):
             "target": target_tokens,
             "ntokens": target_tokens.numel(),
         }
-        return sample
 
     def test_dual_decoder_args(self):
         test_args = test_utils.ModelParamsDict(arch="dual_decoder_kd")

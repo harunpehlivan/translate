@@ -38,14 +38,14 @@ class MorphologyHMMParams(object):
 
         for word in self.word_counts:
             word_count = self.word_counts[word]
-            for i in range(0, len(word)):
+            for i in range(len(word)):
                 for j in range(i, len(word)):
                     substr = word[i : j + 1]
                     self.morph_emit_probs[substr] += word_count
 
         # Normalizing the initial probabilities.
         denom = sum(self.morph_emit_probs.values())
-        for morph in self.morph_emit_probs.keys():
+        for morph in self.morph_emit_probs:
             self.morph_emit_probs[morph] = (
                 self.morph_emit_probs[morph] + self.smoothing_const
             ) / (denom * (1 + self.smoothing_const))
@@ -128,8 +128,7 @@ class MorphologySegmentor(object):
                     back_pointer[end] = start
 
         # finalizing the best segmentation.
-        indices = [n]  # backtracking indices for segmentation.
-        indices.append(back_pointer[-1])
+        indices = [n, back_pointer[-1]]
         while True:
             last_index = indices[-1]
             if last_index == 0:
@@ -149,11 +148,7 @@ class MorphologySegmentor(object):
         string, the algorithm segments that word to one or more substrings.
         """
         indices = self.segment_viterbi(word)
-        outputs = []
-        for i in range(len(indices) - 1):
-            substr = word[indices[i] : indices[i + 1]]
-            outputs.append(substr)
-
+        outputs = [word[indices[i] : indices[i + 1]] for i in range(len(indices) - 1)]
         return " ".join(outputs)
 
 

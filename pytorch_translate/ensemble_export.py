@@ -238,9 +238,7 @@ def save_caffe2_rep_to_db(
             predict_net.Copy(saved_name, param)
             param_names[i] = saved_name
 
-    dummy_shapes = {}
-    for blob in output_names:
-        dummy_shapes[blob] = (0,)
+    dummy_shapes = {blob: (0,) for blob in output_names}
     for blob in input_names:
         dummy_shapes[blob] = (0,)
 
@@ -312,18 +310,14 @@ class EncoderEnsemble(nn.Module):
         # use. We do it here because these reduced matrices are used on each
         # step of the beam search, and this turns out to be a relatively
         # expensive operation.
-        reduced_weights = {}
-        for i, model in enumerate(self.models):
-            if (
+        reduced_weights = {i: torch.jit._fork(
+                    model.decoder._precompute_reduced_weights,
+                    possible_translation_tokens,
+                ) for i, model in enumerate(self.models) if (
                 self.enable_precompute_reduced_weights
                 and hasattr(model.decoder, "_precompute_reduced_weights")
                 and possible_translation_tokens is not None
-            ):
-                reduced_weights[i] = torch.jit._fork(
-                    model.decoder._precompute_reduced_weights,
-                    possible_translation_tokens,
-                )
-
+            )}
         # XXX: This loop is where we wait() for each encoder's output to be
         # ready. If you're trying to add more ops, they should probably not
         # go in this loop!
@@ -1569,18 +1563,14 @@ class CharSourceEncoderEnsemble(nn.Module):
         # use. We do it here because these reduced matrices are used on each
         # step of the beam search, and this turns out to be a relatively
         # expensive operation.
-        reduced_weights = {}
-        for i, model in enumerate(self.models):
-            if (
+        reduced_weights = {i: torch.jit._fork(
+                    model.decoder._precompute_reduced_weights,
+                    possible_translation_tokens,
+                ) for i, model in enumerate(self.models) if (
                 self.enable_precompute_reduced_weights
                 and hasattr(model.decoder, "_precompute_reduced_weights")
                 and possible_translation_tokens is not None
-            ):
-                reduced_weights[i] = torch.jit._fork(
-                    model.decoder._precompute_reduced_weights,
-                    possible_translation_tokens,
-                )
-
+            )}
         # XXX: This loop is where we wait() for each encoder's output to be
         # ready. If you're trying to add more ops, they should probably not
         # go in this loop!
@@ -1748,11 +1738,9 @@ class BeamSearchAndDecode(torch.jit.ScriptModule):
         )
         all_tokens, all_scores, all_weights, all_prev_indices = beam_search_out
 
-        outputs = self.beam_decode(
+        return self.beam_decode(
             all_tokens, all_scores, all_weights, all_prev_indices, num_steps
         )
-
-        return outputs
 
     @classmethod
     def build_from_checkpoints(

@@ -52,11 +52,10 @@ class MultiEncoder(FairseqEncoder):
         all_encoder_outs = [
             encoder(src_tokens, src_lengths) for encoder in self.encoders
         ]
-        combined_encoder_outs = []
-        for i in range(3):
-            combined_encoder_outs.append(
-                torch.cat([e[i] for e in all_encoder_outs], dim=2)
-            )
+        combined_encoder_outs = [
+            torch.cat([e[i] for e in all_encoder_outs], dim=2) for i in range(3)
+        ]
+
         # src_tokens and src_lengths are taken from the first encoder.
         combined_encoder_outs.extend(all_encoder_outs[0][3:])
         return tuple(combined_encoder_outs)
@@ -804,9 +803,10 @@ class MultiDecoder(FairseqIncrementalDecoder):
 
 
 def import_individual_models(restore_files, trainer):
-    param2size = {}
-    for name, param in trainer.model.named_parameters():
-        param2size[name] = param.size()
+    param2size = {
+        name: param.size() for name, param in trainer.model.named_parameters()
+    }
+
     cuda_device = torch.cuda.current_device()
     model_state = {}
     for idx, filename in enumerate(restore_files):

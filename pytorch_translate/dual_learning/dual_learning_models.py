@@ -42,10 +42,9 @@ class DualLearningModel(BaseFairseqModel):
 
         # TODO: pass to dual model too
         primal_encoder_out = self.models["primal"].encoder(src_tokens, src_lengths)
-        primal_decoder_out = self.models["primal"].decoder(
+        return self.models["primal"].decoder(
             prev_output_tokens, primal_encoder_out
         )
-        return primal_decoder_out
 
     def max_positions(self):
         return {
@@ -104,10 +103,7 @@ class RNNDualLearningModel(DualLearningModel):
         """
         base_architecture(args)
 
-        if args.sequence_lstm:
-            encoder_class = LSTMSequenceEncoder
-        else:
-            encoder_class = RNNEncoder
+        encoder_class = LSTMSequenceEncoder if args.sequence_lstm else RNNEncoder
         decoder_class = RNNDecoder
 
         encoder_embed_tokens, decoder_embed_tokens = RNNModel.build_embed_tokens(

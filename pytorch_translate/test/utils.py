@@ -26,31 +26,22 @@ class ModelParamsDict:
             self.arch = "ptt_transformer"
             self.encoder_embed_dim = 10
             self.encoder_ffn_embed_dim = 16
-            self.encoder_layers = 2
             self.encoder_attention_heads = 2
-            self.decoder_embed_dim = 10
             self.decoder_ffn_embed_dim = 16
-            self.decoder_layers = 2
             self.decoder_attention_heads = 2
         elif arch == "hybrid_transformer_rnn":
             self.arch = "hybrid_transformer_rnn"
             self.encoder_embed_dim = 6
             self.encoder_ffn_embed_dim = 16
-            self.encoder_layers = 2
             self.encoder_attention_heads = 2
-            self.decoder_embed_dim = 10
             self.decoder_lstm_units = 13
-            self.decoder_layers = 2
             self.decoder_attention_heads = 2
         elif arch == "dual_decoder_kd":
             self.arch = "dual_decoder_kd"
             self.encoder_embed_dim = 10
             self.encoder_ffn_embed_dim = 16
-            self.encoder_layers = 2
             self.encoder_attention_heads = 2
-            self.decoder_embed_dim = 10
             self.decoder_ffn_embed_dim = 16
-            self.decoder_layers = 2
             self.decoder_attention_heads = 2
             self.student_decoder_embed_dim = 5
             self.student_decoder_layers = 2
@@ -62,11 +53,8 @@ class ModelParamsDict:
             self.arch = "hybrid_dual_decoder_kd"
             self.encoder_embed_dim = 10
             self.encoder_ffn_embed_dim = 16
-            self.encoder_layers = 2
             self.encoder_attention_heads = 2
-            self.decoder_embed_dim = 10
             self.decoder_lstm_units = 16
-            self.decoder_layers = 2
             self.decoder_attention_heads = 2
             self.student_decoder_embed_dim = 5
             self.student_decoder_layers = 2
@@ -80,19 +68,16 @@ class ModelParamsDict:
             self.encoder_embed_path = None
             self.encoder_freeze_embed = False
             self.encoder_hidden_dim = 10
-            self.encoder_layers = 2
             self.encoder_bidirectional = False
             self.encoder_dropout_in = 0
             self.encoder_dropout_out = 0
             self.encoder_context_embed = False
-            self.decoder_embed_dim = 10
             self.decoder_embed_path = None
             self.decoder_freeze_embed = False
             self.decoder_hidden_dim = 10
             self.decoder_out_embed_dim = 5
             self.decoder_out_embed_path = None
             self.out_embed_norm = None
-            self.decoder_layers = 2
             self.dropout = 0
             self.decoder_dropout_in = 0
             self.decoder_dropout_out = 0
@@ -105,6 +90,9 @@ class ModelParamsDict:
             self.sequence_lstm = False
             self.decoder_tie_embeddings = False
             self.language_model_only = False
+        self.encoder_layers = 2
+        self.decoder_layers = 2
+        self.decoder_embed_dim = 10
         # Training params
         self.unk_only_char_encoding = False
         self.criterion = "cross_entropy"
@@ -192,7 +180,7 @@ def prepare_inputs(
 
     def get_single_example(sample_id, src_sentence_length, tgt_sentence_length):
         non_special_start = 4
-        example = {
+        return {
             "id": sample_id,
             # Note: both source and target-side sentences are expected
             # to end in the EOS marker. LanguagePairDataset then:
@@ -215,7 +203,6 @@ def prepare_inputs(
                 + [tgt_dict.eos()]
             ),
         }
-        return example
 
     min_sent_len = 7
     max_sent_len = 12

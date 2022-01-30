@@ -544,7 +544,7 @@ class TransformerEncoderGivenEmbeddings(nn.Module):
         self.layers.extend(
             [
                 fairseq_transformer.TransformerEncoderLayer(args)
-                for i in range(args.encoder_layers)
+                for _ in range(args.encoder_layers)
             ]
         )
 

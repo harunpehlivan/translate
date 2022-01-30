@@ -134,7 +134,6 @@ class AverageAttention(AttentionAbstract):
                 value = torch.cat([saved_state["prev_vec"], value], dim=0)
             saved_state["prev_vec"] = value
             self._set_input_buffer(incremental_state, saved_state)
-            attn_weights = None
             attn = value.mean(0, keepdim=True)
         else:
             saved_state = self._get_input_buffer(incremental_state)
@@ -150,7 +149,7 @@ class AverageAttention(AttentionAbstract):
             saved_state["prev_sum"] = curr_sum
             saved_state["prev_pos"] = pos
             self._set_input_buffer(incremental_state, saved_state)
-            attn_weights = None
+        attn_weights = None
         return attn, attn_weights
 
     def extra_repr(self):
@@ -173,15 +172,14 @@ class AverageWindowAttention(AverageAttention):
         length, batch_size = value.size()[:2]
         if not mask_future_timesteps:
             raise NotImplementedError()
-        else:
-            v = value.transpose(0, 1)
-            attn_weights = value.new_ones(length, length, requires_grad=False)
-            if self.window_size > 0:
-                attn_weights.tril_(0).triu_(1 - self.window_size)
-            attn_weights.div_(attn_weights.sum(1, keepdim=True))
-            attn_weights = attn_weights.unsqueeze_(0).repeat(batch_size, 1, 1)
-            attn = torch.bmm(attn_weights, v)
-            attn = attn.transpose(0, 1).contiguous()
+        v = value.transpose(0, 1)
+        attn_weights = value.new_ones(length, length, requires_grad=False)
+        if self.window_size > 0:
+            attn_weights.tril_(0).triu_(1 - self.window_size)
+        attn_weights.div_(attn_weights.sum(1, keepdim=True))
+        attn_weights = attn_weights.unsqueeze_(0).repeat(batch_size, 1, 1)
+        attn = torch.bmm(attn_weights, v)
+        attn = attn.transpose(0, 1).contiguous()
 
         return attn, attn_weights
 
@@ -197,7 +195,6 @@ class AverageWindowAttention(AverageAttention):
                 value = torch.cat([saved_state["prev_vec"], value], dim=0)
             saved_state["prev_vec"] = value[-self.window_size :]
             self._set_input_buffer(incremental_state, saved_state)
-            attn_weights = None
             attn = value.mean(0, keepdim=True)
         else:
             saved_state = self._get_input_buffer(incremental_state)
@@ -216,7 +213,7 @@ class AverageWindowAttention(AverageAttention):
             saved_state["prev_vec"] = values[-self.window_size :]
             saved_state["prev_sum"] = curr_sum
             self._set_input_buffer(incremental_state, saved_state)
-            attn_weights = None
+        attn_weights = None
         return attn, attn_weights
 
     def extra_repr(self):

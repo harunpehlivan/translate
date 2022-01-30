@@ -133,13 +133,12 @@ class PytorchTranslateTask(FairseqTask):
         print(f"| [{source_lang}] dictionary: {len(source_dict)} types")
         print(f"| [{target_lang}] dictionary: {len(target_dict)} types")
 
-        use_char_source = (
+        if use_char_source := (
             (args.char_source_vocab_file != "")
             or (getattr(args, "arch", "") == "char_source")
             or (getattr(args, "arch", "") == "char_source_transformer")
             or getattr(args, "arch", "") == "char_source_hybrid"
-        )
-        if use_char_source:
+        ):
             char_source_dict = pytorch_translate_dictionary.Dictionary.load(
                 args.char_source_vocab_file
             )
@@ -305,8 +304,7 @@ class PytorchTranslateTask(FairseqTask):
             "word_blanking_prob",
         ]
         for option in noise_options:
-            option_map = getattr(self.args, option + "_map", None)
-            if option_map:
+            if option_map := getattr(self.args, option + "_map", None):
                 option_map = pytorch_translate_utils.maybe_parse_collection_argument(
                     option_map
                 )[direction]

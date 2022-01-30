@@ -42,9 +42,7 @@ class TestONNX(unittest.TestCase):
         task = tasks.DictionaryHolderTask(src_dict, tgt_dict)
 
         num_models = 3
-        model_list = []
-        for _ in range(num_models):
-            model_list.append(task.build_model(test_args))
+        model_list = [task.build_model(test_args) for _ in range(num_models)]
         encoder_ensemble = EncoderEnsemble(model_list)
 
         tmp_dir = tempfile.mkdtemp()
@@ -56,8 +54,8 @@ class TestONNX(unittest.TestCase):
         # PyTorch indexing requires int64 while support for tracing
         # pack_padded_sequence() requires int32.
         sample = next(samples)
-        src_tokens = sample["net_input"]["src_tokens"][0:1].t()
-        src_lengths = sample["net_input"]["src_lengths"][0:1].int()
+        src_tokens = sample["net_input"]["src_tokens"][:1].t()
+        src_lengths = sample["net_input"]["src_lengths"][:1].int()
 
         pytorch_encoder_outputs = encoder_ensemble(src_tokens, src_lengths)
 
@@ -138,9 +136,7 @@ class TestONNX(unittest.TestCase):
         task = tasks.DictionaryHolderTask(src_dict, tgt_dict)
 
         num_models = 3
-        model_list = []
-        for _ in range(num_models):
-            model_list.append(task.build_model(test_args))
+        model_list = [task.build_model(test_args) for _ in range(num_models)]
         encoder_ensemble = EncoderEnsemble(model_list)
 
         # test equivalence
@@ -148,8 +144,8 @@ class TestONNX(unittest.TestCase):
         # PyTorch indexing requires int64 while support for tracing
         # pack_padded_sequence() requires int32.
         sample = next(samples)
-        src_tokens = sample["net_input"]["src_tokens"][0:1].t()
-        src_lengths = sample["net_input"]["src_lengths"][0:1].int()
+        src_tokens = sample["net_input"]["src_tokens"][:1].t()
+        src_lengths = sample["net_input"]["src_lengths"][:1].int()
 
         pytorch_encoder_outputs = encoder_ensemble(src_tokens, src_lengths)
 
@@ -171,7 +167,7 @@ class TestONNX(unittest.TestCase):
         )
 
         # next step inputs (input_tokesn shape: [beam_size])
-        next_input_tokens = torch.LongTensor(np.array([i for i in range(4, 9)]))
+        next_input_tokens = torch.LongTensor(np.array(list(range(4, 9))))
 
         next_prev_scores = pytorch_first_step_outputs[1]
         next_timestep = timestep + 1
@@ -269,10 +265,7 @@ class TestONNX(unittest.TestCase):
         task = tasks.DictionaryHolderTask(src_dict, tgt_dict)
 
         num_models = 3
-        model_list = []
-        for _ in range(num_models):
-            model_list.append(task.build_model(test_args))
-
+        model_list = [task.build_model(test_args) for _ in range(num_models)]
         forced_decoder_ensemble = ForcedDecoder(
             model_list, tgt_dict, word_reward=0.25, unk_reward=-0.5
         )
@@ -304,9 +297,7 @@ class TestONNX(unittest.TestCase):
         task = tasks.DictionaryHolderTask(src_dict, tgt_dict)
 
         num_models = 3
-        model_list = []
-        for _ in range(num_models):
-            model_list.append(task.build_model(test_args))
+        model_list = [task.build_model(test_args) for _ in range(num_models)]
         encoder_ensemble = CharSourceEncoderEnsemble(model_list)
 
         tmp_dir = tempfile.mkdtemp()
@@ -446,9 +437,7 @@ class TestONNX(unittest.TestCase):
         task = tasks.DictionaryHolderTask(src_dict, tgt_dict)
 
         num_models = 3
-        model_list = []
-        for _ in range(num_models):
-            model_list.append(task.build_model(test_args))
+        model_list = [task.build_model(test_args) for _ in range(num_models)]
         encoder_ensemble = CharSourceEncoderEnsemble(model_list)
 
         length = 5
